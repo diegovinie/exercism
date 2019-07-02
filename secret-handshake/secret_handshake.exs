@@ -20,22 +20,19 @@ defmodule SecretHandshake do
     translate_handshakes(code) |> check_reverse(code)
   end
 
-  @spec handshake_steps() :: map()
-  defp handshake_steps, do: %{
-    0b1 => "wink",
-    0b10 => "double blink",
-    0b100 => "close your eyes",
-    0b1000 => "jump"
-  }
-
   @spec translate_handshakes(code :: integer) :: list(String.t())
   defp translate_handshakes(code) do
-    handshake_steps()
-      |> Enum.map(fn ({k, v}) -> if (k &&& code) > 0, do: v, else: nil end)
+    %{
+      0b1 => "wink",
+      0b10 => "double blink",
+      0b100 => "close your eyes",
+      0b1000 => "jump"
+    } |> Enum.map(fn ({k, v}) -> if (k &&& code) > 0, do: v, else: nil end)
       |> Enum.filter(&(&1))
   end
 
   @spec check_reverse(items :: list(String.t()), code :: integer) :: list(String.t())
-  defp check_reverse(items, code), do: if (10000 &&& code) > 0, do:
-    Enum.reverse(items), else: items
+  defp check_reverse(items, code) do
+    if (10000 &&& code) > 0, do: Enum.reverse(items), else: items
+  end
 end

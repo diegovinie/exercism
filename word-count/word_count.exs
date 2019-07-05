@@ -7,27 +7,18 @@ defmodule Words do
   @spec count(String.t()) :: map
   def count(sentence) do
     words = split_words sentence
+    uniques = words |> Enum.uniq |> Map.new(&({&1, 0}))
 
-    words
-      |> Enum.uniq
-      |> Enum.map(fn w -> { w, Enum.reduce(words, 0, count_occurences(w)) } end)
-      |> Map.new
+    Enum.reduce(words, uniques, &(count_reduce(&1, &2)))
   end
 
   @spec split_words(String.t()) :: [String.t()]
   defp split_words(sentence) do
     sentence
-      |> String.split([" ", "_"])
-      |> Enum.map(fn word -> word |> String.downcase |> clean_word end)
-      |> Enum.filter(fn word -> Regex.match?(~r/\w+/, word) end)
-
+      |> String.downcase
+      |> String.split(~r/_|[^\w-äöüÄÖÜß]+/, trim: true)
   end
 
-  @spec count_occurences(String.t()) :: Integer.t()
-  defp count_occurences(pattern) do
-    fn word, acc -> if pattern === word, do: acc + 1, else: acc end
-  end
-
-  @spec clean_word(String.t()) :: String.t()
-  defp clean_word(word), do: Regex.replace(~r/^.*?([\w-äöüÄÖÜß]+).*$/, word, "\\1")
+  @spec count_reduce(String.t, map) :: map
+  defp count_reduce(word, score), do: Map.update(score, word, 0, &(&1 + 1))
 end

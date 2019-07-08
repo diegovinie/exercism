@@ -20,6 +20,9 @@ defmodule Accumulate do
     map(list, fun)
   end
 
+  # solution with coprehension lists, sugar for map, filter, reduce
+  # def accumulate(list, fun), do: for n <- list, do: fun.(n)
+
   defp map([], _fun), do: []
   defp map([head | tail], fun), do: [fun.(head) | map(tail, fun)]
 end

@@ -1,37 +1,27 @@
 defmodule Counting do
   @moduledoc """
-    Counter value is 115
-    Process A reads the value of the counter (115)
-    Process B reads the value of the counter (115)
-    Process B increases the value locally (116)
-    Process B sets increased value to the counter (116)
-    Process A increases the value of the counter (116)
-    Process A sets increased value to the counter (116)
-    Counter value is 116
+    fixed
   """
 
   @doc """
+    Esto mantiene el valor como parámetro durante la recursividad
     recibe un :get y manda el value con que fue llamada
-    recibe un :set, no manda nada y devuelve con en nuevo valor
   """
   def counter(value) do
     receive do
       {:get, sender} ->
         send sender, {:counter, value}
         counter value
-      {:set, new_value} -> counter(new_value)
+      :increase -> counter value + 1
     end
   end
 
   @doc """
-    times veces manda un :get, con el valor de la respuesta manda un set más 1
+    simple, es llamada y manda un mensaje :increase
   """
   def counting(sender, counter, times) do
     if times > 0 do
-      send counter, {:get, self()}
-      receive do
-        {:counter, value} -> send counter, {:set, value + 1}
-      end
+      send counter, :increase
       counting(sender, counter, times - 1) # re ejecuta
     else
       send sender, {:done, self()}  # aqui termina
@@ -40,7 +30,7 @@ defmodule Counting do
 end
 
 # veces
-times = 500_000
+times = 500_000 * 10
 # crea un nuevo proceso
 counter = spawn fn -> Counting.counter 0 end
 # acá inicia la aplicación

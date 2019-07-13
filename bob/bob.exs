@@ -1,31 +1,21 @@
 defmodule Bob do
-  @matchers %{
-    is_question: ~r/\?$/,
-    is_russian_yelling: ~r/^[[:upper:]]+$/u,
-    is_yelling: ~r/^[^:lower:]{3,}$/,
-    no_letters: ~r/^[^A-Za-z]*$/,
-    spaces: ~r/^\s*$/
-  }
+
   def hey(input) do
     cond do
-      check(input, :spaces) ->
-        "Fine. Be that way!"
-      check(input, :is_question) and check(input, :is_yelling) ->
+      is_question(input) and is_yelling(input) ->
         "Calm down, I know what I'm doing!"
-      check(input, :is_question) ->
-        "Sure."
-      check(input, :is_russian_yelling) ->
-        "Whoa, chill out!"
-      check(input, :no_letters) ->
-        "Whatever."
-      check(input, :is_yelling)
-      -> "Whoa, chill out!"
-      true
-      -> "Whatever."
+      is_question(input)  -> "Sure."
+      is_yelling(input)   -> "Whoa, chill out!"
+      say_nothing?(input) -> "Fine. Be that way!"
+      true                -> "Whatever."
     end
   end
 
-  def check(text, condition) do
-    String.match?(text, Map.get(@matchers, condition))
-  end
+  defp is_question(text), do: String.ends_with? text, "?"
+
+  defp is_yelling(text), do: letters?(text) and text === String.upcase(text)
+
+  defp say_nothing?(text), do: "" === String.trim text
+
+  defp letters?(text), do: !(String.upcase(text) === String.downcase(text))
 end

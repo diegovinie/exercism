@@ -23,9 +23,9 @@ defmodule RunLengthEncoder do
   @spec decode(String.t()) :: String.t()
   def decode(string) do
     Regex.scan(~r/(\d+)?([\w ])/, string)
-    |> map_join("", &expand/1)
+    |> map_join("", fn
+      [_, "", char] ->  char
+      [_, num, char] -> duplicate(char, to_integer(num))
+    end)
   end
-
-  defp expand([_, "", char]), do: char
-  defp expand([_, num, char]), do: duplicate(char, to_integer(num))
 end

@@ -12,9 +12,13 @@ defmodule Prime do
   def count(0, prime), do: prime
   def count(num, prime), do: count(num - 1, next(prime))
 
-  @spec prime?(pos_integer) :: boolean
+  # from screamingjungle's solution
   def prime?(2), do: true
-  def prime?(num), do: not Enum.any? 2..(num - 1), &(rem(num, &1) == 0)
+  def prime?(n) when n < 2 or rem(n, 2) == 0, do: false
+  def prime?(n), do: prime?(n, 3)
+  defp prime?(n, k) when n < k*k, do: true
+  defp prime?(n, k) when rem(n, k) == 0, do: false
+  defp prime?(n, k), do: prime?(n, k + 2)
 
   @spec next(pos_integer) :: pos_integer
   def next(num), do: if prime?(num + 1), do: num + 1, else: next(num + 1)

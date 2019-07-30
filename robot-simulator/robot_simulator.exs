@@ -11,6 +11,11 @@ defmodule RobotSimulator do
     west:  %{"A" => {-1, 0}, "L" => :south, "R" => :north}
   }
 
+  defguard is_valid_position(t) when is_tuple(t)
+                                and tuple_size(t) == 2
+                                and is_integer(elem(t, 0))
+                                and is_integer(elem(t, 1))
+
   defstruct direction: :north, position: {0, 0}
 
   @doc """
@@ -19,13 +24,12 @@ defmodule RobotSimulator do
   Valid directions are: `:north`, `:east`, `:south`, `:west`
   """
   @spec create(direction :: atom, position :: {integer, integer}) :: any
-  def create(direction \\ :north, position \\ {0, 0}) do
-    case valid_position?(position) do
-      false -> @position_error
-      true  -> case Map.has_key?(@controls, direction) do
-        false -> @direction_error
-        true  -> %RobotSimulator{direction: direction, position: position}
-      end
+  def create(direction \\ :north, position \\ {0, 0})
+  def create(_, position) when not is_valid_position(position), do: @position_error
+  def create(direction, position) when is_valid_position(position) do
+    case Map.has_key?(@controls, direction) do
+      false -> @direction_error
+      true  -> %RobotSimulator{direction: direction, position: position}
     end
   end
 
@@ -61,9 +65,6 @@ defmodule RobotSimulator do
     robot.position
   end
 
-  defp valid_position?({x, y}) when is_integer(x) and is_integer(y), do: true
-  defp valid_position?(_), do: false
-
   defp exec_order("A", robot) do
     position = sum_duples(robot.position, @controls[robot.direction]["A"])
     %{robot | position: position}
@@ -72,7 +73,7 @@ defmodule RobotSimulator do
     %{robot | direction: @controls[robot.direction][order]}
   end
 
-  defp sum_duples(a, b) do
-    {elem(a, 0) + elem(b, 0), elem(a, 1) + elem(b, 1)}
+  defp sum_duples({a1, a2}, {b1, b2}) do
+    {a1 + b1, a2 + b2}
   end
 end

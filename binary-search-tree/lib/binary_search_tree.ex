@@ -26,8 +26,9 @@ defmodule BinarySearchTree do
   Traverses the Binary Search Tree in order and returns a list of each node's data.
   """
   @spec in_order(bst_node) :: [any]
+  def in_order(nil), do: []
   def in_order(%{data: data, left: left, right: right}) do
-    check_node(&in_order/1, left) ++ [data] ++ check_node(&in_order/1, right)
+    in_order(left) ++ [data] ++ in_order(right)
   end
 
   defp move_left(%{left: slot}, data) when is_nil(slot), do: new(data)
@@ -35,9 +36,4 @@ defmodule BinarySearchTree do
 
   defp move_right(%{right: slot}, data) when is_nil(slot), do: new(data)
   defp move_right(%{right: slot}, data), do: insert(slot, data)
-
-  defp check_node(callback, %BinarySearchTree{} = node) do
-    callback.(node)
-  end
-  defp check_node(_, _), do: []
 end

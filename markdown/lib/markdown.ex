@@ -11,69 +11,88 @@ defmodule Markdown do
     "<h1>Header!</h1><ul><li><em>Bold Item</em></li><li><i>Italic Item</i></li></ul>"
   """
   @spec parse(String.t()) :: String.t()
-  def parse(m) do
-    patch(Enum.join(Enum.map(String.split(m, "\n"), fn t -> process(t) end)))
+  def parse(markdown_text) do
+    markdown_text
+    |> String.split("\n")
+    |> Enum.map(&process/1)
+    |> Enum.join
+    |> patch
   end
 
-  defp process(t) do
-    if String.starts_with?(t, "#") || String.starts_with?(t, "*") do
-      if String.starts_with?(t, "#") do
-        enclose_with_header_tag(parse_header_md_level(t))
-      else
-        parse_list_md_level(t)
-      end
-    else
-      enclose_with_paragraph_tag(String.split(t))
-    end
+  @spec process(String.t()) :: String.t()
+  defp process("*" <> _ = text), do: parse_list_md_level(text)
+  defp process("#" <> _ = text) do
+    text
+    |> parse_header_md_level
+    |> enclose_with_header_tag
+  end
+  defp process(text) do
+    text
+    |> String.split
+    |> enclose_with_paragraph_tag
   end
 
-  defp parse_header_md_level(hwt) do
-    [h | t] = String.split(hwt)
-    {to_string(String.length(h)), Enum.join(t, " ")}
+  @spec parse_header_md_level(String.t()) :: {integer, String.t()}
+  defp parse_header_md_level(hashes_and_text) do
+    [[_, hashes, text]] = Regex.scan(~r/^(#+) (.*)$/, hashes_and_text)
+
+    {String.length(hashes), text}
   end
 
-  defp parse_list_md_level(l) do
-    t = String.split(String.trim_leading(l, "* "))
-    "<li>" <> join_words_with_tags(t) <> "</li>"
+  @spec parse_list_md_level(String.t()) :: String.t()
+  defp parse_list_md_level(line) do
+    text = line
+    |> String.trim_leading("* ")
+    |> String.split
+    |> join_words_with_tags
+
+    "<li>#{ text }</li>"
   end
 
-  defp enclose_with_header_tag({hl, htl}) do
-    "<h" <> hl <> ">" <> htl <> "</h" <> hl <> ">"
+  @spec enclose_with_header_tag({integer, String.t()}) :: String.t()
+  defp enclose_with_header_tag({level, text}) do
+    "<h#{ level }>#{ text }</h#{ level }>"
   end
 
-  defp enclose_with_paragraph_tag(t) do
-    "<p>#{join_words_with_tags(t)}</p>"
+  @spec enclose_with_paragraph_tag(String.t()) :: String.t()
+  defp enclose_with_paragraph_tag(text) do
+    string = join_words_with_tags(text)
+
+    "<p>#{string}</p>"
   end
 
-  defp join_words_with_tags(t) do
-    Enum.join(Enum.map(t, fn w -> replace_md_with_tag(w) end), " ")
+  @spec join_words_with_tags(String.t()) :: String.t()
+  defp join_words_with_tags(text) do
+    text
+    |> Enum.map(&replace_md_with_tag/1)
+    |> Enum.join(" ")
   end
 
-  defp replace_md_with_tag(w) do
-    replace_suffix_md(replace_prefix_md(w))
+  @spec replace_md_with_tag(String.t()) :: String.t()
+  defp replace_md_with_tag(word) do
+    word
+    |> replace_prefix_md
+    |> replace_suffix_md
   end
 
-  defp replace_prefix_md(w) do
-    cond do
-      w =~ ~r/^#{"__"}{1}/ -> String.replace(w, ~r/^#{"__"}{1}/, "<strong>", global: false)
-      w =~ ~r/^[#{"_"}{1}][^#{"_"}+]/ -> String.replace(w, ~r/_/, "<em>", global: false)
-      true -> w
-    end
+  @spec replace_prefix_md(String.t()) :: String.t()
+  defp replace_prefix_md(word) do
+    word
+    |> String.replace(~r/^__{1}/, "<strong>", global: false)
+    |> String.replace(~r/^([_{1}])([^_+])/, "<em>\\2", global: false)
   end
 
-  defp replace_suffix_md(w) do
-    cond do
-      w =~ ~r/#{"__"}{1}$/ -> String.replace(w, ~r/#{"__"}{1}$/, "</strong>")
-      w =~ ~r/[^#{"_"}{1}]/ -> String.replace(w, ~r/_/, "</em>")
-      true -> w
-    end
+  @spec replace_suffix_md(String.t()) :: String.t()
+  defp replace_suffix_md(word) do
+    word
+    |> String.replace(~r/__{1}$/, "</strong>")
+    |> String.replace(~r/_/, "</em>")
   end
 
-  defp patch(l) do
-    String.replace_suffix(
-      String.replace(l, "<li>", "<ul>" <> "<li>", global: false),
-      "</li>",
-      "</li>" <> "</ul>"
-    )
+  @spec patch(String.t()) :: String.t()
+  defp patch(list) do
+    list
+    |> String.replace("<li>", "<ul><li>", global: false)
+    |> String.replace_suffix("</li>", "</li></ul>")
   end
 end

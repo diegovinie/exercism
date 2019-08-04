@@ -35,12 +35,8 @@ defmodule LinkedList do
   Get the value of a head of the LinkedList
   """
   @spec peek(t) :: {:ok, any()} | {:error, :empty_list}
-  def peek({data, _} = list) do
-    case empty?(list) do
-      true  -> @error_empty
-      false -> {:ok, data}
-    end
-  end
+  def peek(@empty_list), do: @error_empty
+  def peek({data, _}), do: {:ok, data}
 
   @doc """
   Get tail of a LinkedList

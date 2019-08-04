@@ -22,27 +22,28 @@ defmodule Solution do
 
   @spec strongest_died(armies, integer) :: armies
   def strongest_died(armies, id) do
-    army = armies[id]
-    strongest = get_strongest(army)
-
-    %{armies | id => Enum.filter(armies[id], fn soldier ->
-      soldier != strongest
-      end)
-    }
+    [_strongest | rest] = armies[id]
+    %{armies | id => rest}
   end
 
   @spec recruit(armies, integer, integer) :: armies
   def recruit(armies, id, soldier) do
-    %{armies | id => [ soldier | armies[id] ]}
+    %{ armies | id => add_soldier(armies[id], soldier) }
   end
 
   @spec merge(armies, integer, integer) :: armies
   def merge(armies, a, b) do
-    %{armies | a => Enum.concat(armies[a], armies[b])}
+    %{armies | a => compare_merge(armies[a], armies[b])}
     |> Map.delete(b)
   end
 
   ################## AUX #########################
+
+  def add_soldier([strongest | rest], soldier) when strongest > soldier do
+    [strongest | add_soldier(rest, soldier)]
+  end
+  def add_soldier([], soldier), do: [soldier]
+  def add_soldier(army, soldier), do: [soldier | army]
 
   @spec create_armies(non_neg_integer, armies) :: armies
   defp create_armies(length, armies \\ %{})
@@ -63,8 +64,17 @@ defmodule Solution do
   end
 
   @spec get_strongest([integer]) :: integer
-  defp get_strongest(army), do: Enum.max(army)
+  defp get_strongest([strongest | _]), do: strongest
 
+  @spec compare_merge([integer], [integer]) :: [integer]
+  def compare_merge(as, []), do: as
+  def compare_merge([], bs), do: bs
+  def compare_merge([a | rest_a] = as, [b | rest_b] = bs) do
+    case a > b do
+      true -> [a | compare_merge(rest_a, bs)]
+      false -> [b | compare_merge(as, rest_b)]
+    end
+  end
   #################### IO #########################
 
   def read() do

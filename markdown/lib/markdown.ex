@@ -14,9 +14,8 @@ defmodule Markdown do
   def parse(markdown_text) do
     markdown_text
     |> String.split("\n")
-    |> Enum.map(&process/1)
-    |> Enum.join
-    |> patch
+    |> Enum.map_join("", &process/1)
+    |> enclose_with_ul_tags
   end
 
   @spec process(String.t()) :: String.t()
@@ -63,9 +62,7 @@ defmodule Markdown do
 
   @spec join_words_with_tags(String.t()) :: String.t()
   defp join_words_with_tags(text) do
-    text
-    |> Enum.map(&replace_md_with_tag/1)
-    |> Enum.join(" ")
+    Enum.map_join(text, " ", &replace_md_with_tag/1)
   end
 
   @spec replace_md_with_tag(String.t()) :: String.t()
@@ -89,8 +86,8 @@ defmodule Markdown do
     |> String.replace(~r/_/, "</em>")
   end
 
-  @spec patch(String.t()) :: String.t()
-  defp patch(list) do
+  @spec enclose_with_ul_tags(String.t()) :: String.t()
+  defp enclose_with_ul_tags(list) do
     list
     |> String.replace("<li>", "<ul><li>", global: false)
     |> String.replace_suffix("</li>", "</li></ul>")

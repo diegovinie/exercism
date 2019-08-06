@@ -16,7 +16,7 @@ defmodule Solution do
 
   @spec find_strongest(armies, integer) :: armies
   def find_strongest(armies, id) do
-    armies[id] |> get_strongest |> IO.inspect
+    armies[id] |> get_strongest |> IO.puts
     armies
   end
 
@@ -75,18 +75,20 @@ defmodule Solution do
       false -> [b | compare_merge(as, rest_b)]
     end
   end
+
   #################### IO #########################
+  @space 32
+  def parse(line, v \\ 0, acc \\ [])
+  def parse(<<>>, v, acc), do: Enum.reverse([v|acc])
+  def parse("\n", v, acc), do: parse("", v, acc)
+  def parse(<<@space, rest::binary>>, v, acc), do: parse(rest, 0, [v|acc])
+  def parse(<<c, rest::binary>>, v, acc), do: parse(rest, v * 10 + (c - ?0), acc)
 
   def read() do
     [armies, _] = IO.read(:line) |> String.trim |> String.split
 
-    orders = IO.read(:all)
-    |> String.split("\n")
-    |> Enum.map(fn line ->
-      line
-      |> String.split
-      |> Enum.map(&String.to_integer/1)
-    end)
+    orders = IO.binstream(:stdio, :line)
+    |> Enum.map(fn line -> parse(line) end)
 
     {armies |> String.to_integer |> create_armies, orders}
   end

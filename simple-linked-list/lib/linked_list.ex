@@ -22,7 +22,7 @@ defmodule LinkedList do
   """
   @spec length(t) :: non_neg_integer()
   def length(@empty_list), do: 0
-  def length({_, next}), do: 1 + LinkedList.length(next)
+  def length({_, next}), do: 1 + __MODULE__.length(next)
 
   @doc """
   Determine if a LinkedList is empty

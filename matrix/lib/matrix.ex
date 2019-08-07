@@ -42,11 +42,9 @@ defmodule Matrix do
   """
   @spec columns(matrix :: %Matrix{}) :: list(list(integer))
   def columns(%Matrix{matrix: matrix}) do
-    columns = matrix |> hd |> length
-
-    for col <- 0..(columns - 1) do
-      matrix |> map( &at(&1, col) )
-    end
+    matrix
+    |> Enum.zip
+    |> map(&Tuple.to_list/1)
   end
 
   @doc """
